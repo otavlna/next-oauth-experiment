@@ -27,7 +27,6 @@ export default async function handler(
     try {
       const form = new Form();
       form.parse(req, async (err, fields, files) => {
-        console.log(files);
         if (err) {
           console.error(err);
           res.status(500).send({});
@@ -36,7 +35,6 @@ export default async function handler(
 
         const date = new Date();
         const filePath = files.file[0].path;
-        console.log(filePath);
         storage
           .bucket(process.env.FIREBASE_STORAGE_BUCKET as string)
           .upload(filePath);
@@ -49,6 +47,15 @@ export default async function handler(
           image: filePath.split("/").pop() as string,
           imageLabel: `Image of ${fields.title[0]}`,
         });
+        const revalidateRes = await fetch(
+          new URL(
+            `/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}`,
+            process.env.NEXT_PUBLIC_API_URL
+          ),
+          {
+            method: "POST",
+          }
+        );
         res.status(201).send({});
       });
     } catch (err) {
